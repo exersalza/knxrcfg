@@ -3,6 +3,7 @@
 import os
 import sys
 import re
+import io
 
 from typing import Any
 
@@ -15,18 +16,20 @@ class NoConfigError(Exception):
 
 class Config:
     def __init__(self, path: str = None) -> None:
-        self._PATH: str = path # persistent, but maybe not for long
-        self._file: str = None # changed later to the file path, maybe dropable when you dont want a persistent _path var.
+        self._path: str = path
         self._configs = {"bare": [], "named": []}
         self._config = {}
 
         self.__load_config()
 
     def __load_config(self):
-        if not self._PATH:
+        if not self._path:
             if not self.__find_config():
                 raise FileNotFoundError("Config cannot be found due to no config in root/sub directory or none is given.")
 
+
+        with open(self._path, 'r', encoding="utf-8") as f:
+            self.__lexer(f)
         
     def __find_config(self) -> int:
         c = 0
@@ -40,11 +43,52 @@ class Config:
                 if re.match(FILE_REG_NAME, file):
                     c += 1
                     self._configs["named"].append(f"{root}/{file}")
+        
+        if len(self._configs["bare"]):
+            self._path = self._configs["bare"][0]
+        
+        if len(self._configs["named"]) and not self._path:
+            self._path = self._configs["named"][0]
+        
 
         return c
 
-    def __lexer(self):
-        pass
+    def __lexer(self, file_handle: io.TextIOWrapper):
+        category = ""
+
+        for i in file_handle.readlines():
+            # get newlines for unix and windows based systems and also comments and just yeet them, 
+            # no one needs them, also later run a check for newlines bc of categorys
+            if i in ("\n", "\r\n") or i.startswith("//"):
+                if not i.startswith("//"):
+                    category = ""
+
+                continue
+            
+            if "//" in i:
+                comment = i.index("//")
+                i = i[:comment]
+
+            if "(" in i:
+                continue
+
+            key, value = self.__key_and_value(i)
+            self._config[key] = value
+
+    def __key_and_value(self, i: str) -> tuple:
+        index = i.index("=")
+        value = str(i[index + 1:].strip().strip("\n\r\"'"))
+
+        try:
+            if '.' in value:
+                value = float(value)
+                raise ValueError
+            
+            value = int(value)
+        except ValueError:
+            pass
+
+        return i[:index], value
     
 
     def get(self, key) -> Any:
@@ -56,7 +100,14 @@ class Config:
     def __getitem__(self, key) -> Any:
         return self.get(key)
 
+    def __repr__(self):
+        return self._config
+
+    def __str__(self):
+        return str(self._config)
+
 
 if __name__ == "__main__":
     config = Config()
+    print(config)
     
