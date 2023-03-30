@@ -10,6 +10,8 @@ from typing import Any
 FILE_REG_BARE = r"(\.knxrcfg$)|(\.kxcfg$)"
 FILE_REG_NAME = r"(([a-zA-Z0-9_\-]*)\.knxrcfg$)|(([a-zA-Z0-9_\-]*)\.kxcfg$)"
 
+LINE_CATEGORY_REG = r"(\(.*\))"
+
 class NoConfigError(Exception):
     pass
 
@@ -68,32 +70,45 @@ class Config:
             if "//" in i:
                 comment = i.index("//")
                 i = i[:comment]
-
-            if "(" in i:
+            
+            if re.match(LINE_CATEGORY_REG, i):
+                category = i.strip().strip("()")
+                self._config[category] = {}
                 continue
 
             key, value = self.__key_and_value(i)
-            self._config[key] = value
+
+            if not category:
+                self._config[key] = value
+                continue
+            
+            self._config[category][key] = value
 
     def __key_and_value(self, i: str) -> tuple:
         index = i.index("=")
-        value = str(i[index + 1:].strip().strip("\n\r\"'"))
+        value = str(i[index + 1:].strip().strip("\n\r\t\"'"))  # strip of tab, string and newlines
 
-        try:
-            if '.' in value:
-                value = float(value)
-                raise ValueError
-            
-            value = int(value)
-        except ValueError:
-            pass
+        value = self.__convert_to_numeric(value)
 
         return i[:index], value
     
 
+    def __convert_to_numeric(self, value: str) -> int|float:
+        try:
+            if '.' in value:
+                value = float(value)
+                return value
+            
+            value = int(value)
+
+        except ValueError:
+            pass
+        
+        return value
+
     def get(self, key) -> Any:
-        if not self._config:
-            raise NoConfigError("No config has been loaded yet.") 
+        if not self._config:  # edge case when somehow someone is trying to get the config while its not even loaded.
+            raise NoConfigError("No config has been loaded yet.")
 
         return self._config.get(key, None)
 
