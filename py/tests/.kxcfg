@@ -1,7 +1,7 @@
 (cool2)
-name="Python2"
+name='Python2'
 age=23
 age2=20.2
 
 // some random string 2
-test=["two string", 23, 2.222]
+test=['two string', 23, 2.222]

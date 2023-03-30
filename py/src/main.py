@@ -8,9 +8,11 @@ import io
 from typing import Any
 
 FILE_REG_BARE = r"(\.knxrcfg$)|(\.kxcfg$)"
-FILE_REG_NAME = r"(([a-zA-Z0-9_\-]*)\.knxrcfg$)|(([a-zA-Z0-9_\-]*)\.kxcfg$)"
+FILE_REG_NAME = r"(([a-zA-Z0-9_]+)\.knxrcfg$)|(([a-zA-Z0-9_]+)\.kxcfg$)"
 
-LINE_CATEGORY_REG = r"(\(.*\))"
+LINE_CATEGORY_REG = r"(\(.+\))"
+LINE_IS_LIST_REG = r"(\[.+\])"
+
 
 class NoConfigError(Exception):
     pass
@@ -78,10 +80,21 @@ class Config:
 
             key, value = self.__key_and_value(i)
 
+            if re.match(LINE_IS_LIST_REG, str(value)):
+                values = value.strip("[]").replace("'", '').replace('"', '').split(",")
+                temp = []
+
+                for j in values:
+                    j = self.__convert_to_numeric(j.strip())
+                    
+                    temp.append(j)
+
+                value = temp
+
             if not category:
                 self._config[key] = value
                 continue
-            
+
             self._config[category][key] = value
 
     def __key_and_value(self, i: str) -> tuple:
