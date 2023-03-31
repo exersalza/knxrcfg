@@ -1,7 +1,6 @@
 #!/bin/python3
 
 import os
-import sys
 import re
 import io
 
@@ -29,11 +28,11 @@ class Config:
     def __load_config(self):
         if not self._path:
             if not self.__find_config():
-                raise FileNotFoundError("Config cannot be found due to no config in root/sub directory or none is given.")
-
+                raise FileNotFoundError(
+                            "Config cannot be found due to no config in root/sub directory or none is given.")
 
         with open(self._path, 'r', encoding="utf-8") as f:
-            self.__lexer(f)
+            self.__lexer(f)  # IT'S THERE
         
     def __find_config(self) -> int:
         c = 0
@@ -48,13 +47,13 @@ class Config:
                     c += 1
                     self._configs["named"].append(f"{root}/{file}")
         
+        # Path setter, nearly not found
         if len(self._configs["bare"]):
             self._path = self._configs["bare"][0]
         
         if len(self._configs["named"]) and not self._path:
             self._path = self._configs["named"][0]
         
-
         return c
 
     def __lexer(self, file_handle: io.TextIOWrapper):
@@ -105,8 +104,8 @@ class Config:
 
         return i[:index], value
     
-
-    def __convert_to_numeric(self, value: str) -> int|float:
+    @staticmethod
+    def __convert_to_numeric(value: str) -> int | float:
         try:
             if '.' in value:
                 value = float(value)
