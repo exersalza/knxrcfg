@@ -6,8 +6,7 @@ import io
 
 from typing import Any
 
-FILE_REG_BARE = r"(\.knxrcfg$)|(\.kxcfg$)"
-FILE_REG_NAME = r"(([a-zA-Z0-9_]+)\.knxrcfg$)|(([a-zA-Z0-9_]+)\.kxcfg$)"
+FILE_REG = r"(\w+)?((\.knxrcfg$)|(\.kxcfg$))"
 
 LINE_CATEGORY_REG = r"(\(.+\))"
 LINE_IS_LIST_REG = r"(\[.+\])"
@@ -20,7 +19,7 @@ class NoConfigError(Exception):
 class Config:
     def __init__(self, path: str = None) -> None:
         self._path: str = path
-        self._configs = {"bare": [], "named": []}
+        self._configs = []
         self._config = {}
 
         self.__load_config()
@@ -38,21 +37,13 @@ class Config:
         c = 0
         for root, _, files in os.walk('.'):
             for file in files:
-                if re.match(FILE_REG_BARE, file):
-                    self._configs["bare"].append(f"{root}/{file}")
+                if re.match(FILE_REG, file):
+                    self._configs.append(f"{root}/{file}")
                     c += 1
-                    continue
-
-                if re.match(FILE_REG_NAME, file):
-                    c += 1
-                    self._configs["named"].append(f"{root}/{file}")
         
         # Path setter, nearly not found
-        if len(self._configs["bare"]):
-            self._path = self._configs["bare"][0]
-        
-        if len(self._configs["named"]) and not self._path:
-            self._path = self._configs["named"][0]
+        if len(self._configs):
+            self._path = self._configs[0]
         
         return c
 
