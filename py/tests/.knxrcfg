@@ -1,7 +1,0 @@
-(cool)
-name="Python"
-age=20
-age2=20.3
-
-// some random string
-test=["one string", 22, 2.221] // test comment

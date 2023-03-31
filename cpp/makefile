@@ -1,15 +1,17 @@
 CXX = g++
-CXX_FLAGS = -std=c++2a
+CXXFLAGS = -std=c++2a
 
-main: config.o clean
-	${CXX} ${CXX_FLAGS} -o a.out main.cpp config.cpp
+OBJS = config.o
 
-config.o:
-	${CXX} ${CXX_FLAGS} -nostartfiles config.cpp -o config.o
+.PHONY: clean
 
+all: main
 
-run: main
-	./a.out
+main: main.cpp $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+config.o: config.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	@rm -rf *.out *.o
+	rm -f $(OBJS) main
