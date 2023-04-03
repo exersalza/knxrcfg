@@ -1,4 +1,5 @@
 #!/bin/python3
+from __future__ import annotations
 
 import os
 import re
@@ -31,7 +32,7 @@ class Config:
                             "Config cannot be found due to no config in root/sub directory or none is given.")
 
         with open(self._path, 'r', encoding="utf-8") as f:
-            self.__lexer(f)  # IT'S THERE
+            self.__lexer(f)  # THERE IS NO FCKING
         
     def __find_config(self) -> int:
         c = 0

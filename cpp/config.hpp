@@ -8,14 +8,15 @@
 
 class Config {
 public:
-    explicit Config(std::string&& path = ".");
-    
+    explicit Config(std::string &&path);
+
 private:
     const std::string path;
-    std::map<std::string, std::any> config;
-    std::map<std::string, std::vector<std::string>> config_paths;
+    std::map <std::string, std::any> config;
+    std::string config_path;
 
     int load_config();
+
     int find_config();
 
     std::regex f_bare = std::regex("(\\w+)?((\\.knxrcfg$)|(\\.kxcfg$))");
