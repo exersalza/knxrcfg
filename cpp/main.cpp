@@ -3,10 +3,9 @@
 
 #include "config.hpp"
 
-
 int main(int argc, char **argv) {
     Config config {"."};
 
-    std::cout << "Hello world" << std::endl;
+    std::cout << config["name"] << std::endl;
     return 0;
 }

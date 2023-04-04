@@ -7,6 +7,20 @@
 
 namespace fs = std::filesystem;
 
+struct parsed_line {
+    std::string key;
+    std::string value;
+};
+
+std::vector<std::string> split(const std::string& str, const std::string& del) {
+    std::regex reg(del);
+    std::sregex_token_iterator iter(str.begin(), str.end(), reg, -1);
+    std::vector<std::string> ret(iter, std::sregex_token_iterator());
+
+
+    return ret;
+}
+
 
 Config::Config(std::string &&path) : path(path) {
     find_config();
@@ -40,6 +54,7 @@ int Config::load_config() {
 
     if (!file.is_open()) {
         std::cerr << "Can't open " << config_path << "!\n";
+        return -1;
     }
 
     std::string line;
@@ -47,10 +62,11 @@ int Config::load_config() {
 
     while (std::getline(file, line)) {
         // sort out empty and comment lines.
-        if (line.empty()) {
+        if (line.empty() || line.length() < 2 || (line[0] == '/' && line[1] == ' ')) {
             last_category = "";
             continue;
         }
+
         if (line[0] == '/' && line[1] == '/') continue;
 
         // get category and lists
@@ -63,10 +79,22 @@ int Config::load_config() {
         }
 
         // ^ fun stuff, now it's getting jazzy
+        std::vector<std::string> split_line = split(line, "=");
 
+        if (split_line.size() < 2) continue; // I don't know how you can fuck up the config.
+        parsed_line kv {split_line[0], split_line[1]};
+          
+        if (std::regex_match(kv.value, l_is_string)) {
+            kv.value = std::regex_replace(kv.value, std::regex("[\"']"), "");
+        }
 
-        if (std::regex_match(line, l_list)) {
+        if (std::regex_match(kv.value, l_list)) {
+            kv.value = std::regex_replace(kv.value, std::regex("[\\[\\]]"), "");
+            std::vector<std::string> t = split(kv.value, ", ");
 
+            for (std::string& i : t) {
+                std::cout << i << '\n';
+            }
         }
     }
 

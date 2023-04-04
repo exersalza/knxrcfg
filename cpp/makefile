@@ -13,5 +13,8 @@ main: main.cpp $(OBJS)
 config.o: config.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+run:
+	./main
+
 clean:
 	rm -f $(OBJS) main
