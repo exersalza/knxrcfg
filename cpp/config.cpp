@@ -4,8 +4,11 @@
 #include <fstream>
 #include <sstream>
 #include <limits>
+#include <any>
 
 namespace fs = std::filesystem;
+
+void move_stuff(const std::string& yep, std::vector<any_nested>& where_to_move);
 
 struct parsed_line {
     std::string key;
@@ -93,10 +96,6 @@ int Config::load_config() {
             line.replace(line.find(')'), 1, "");
 
             last_category = line;
-
-            if (!config.count(last_category)) {
-                config[last_category] = std::map<std::string, std::any>();
-            }
             continue;
         }
 
@@ -113,32 +112,40 @@ int Config::load_config() {
         if (std::regex_match(kv.value, l_list)) {
             kv.value = std::regex_replace(kv.value, std::regex("[\\[\\]]"), "");
             std::vector<std::string> t = split(kv.value, ",");
-            std::vector<std::any> ret;
+            std::vector<any_nested> ret;
             ret.reserve(t.size());
 
             for (std::string& i : t) {
                 std::string yep = strip(i);
 
-                // maybe not the optimal way, but it works, maybe I fix it later.
-                if (is_numeric<int>(yep)) {
-                    ret.push_back(std::stoi(yep));
-                    continue;
-                }
-                if (is_numeric<double>(yep)) {
-                    ret.push_back(std::stod(yep));
-                    continue;
-                }
-
-                ret.push_back(yep);
+                move_stuff(yep, ret);
             }
 
-            if (!last_category.empty()) {
-
-                config[last_category][kv.key] = ret;
-            }
+//            if (!last_category.empty()){
+//                if (!config.count(last_category)) {
+//                    config[last_category] = std::map<std::string, _any> {};
+//                }
+//
+//
+//            }
         }
     }
 
     file.close();
     return 0;
+}
+
+void move_stuff(const std::string& yep, std::vector<any_nested>& where_to_move ) {
+    // maybe not the optimal way, but it works, maybe I fix it later.
+    if (is_numeric<int>(yep)) {
+        where_to_move.push_back(std::stoi(yep));
+        return;
+    }
+
+    if (is_numeric<double>(yep)) {
+        where_to_move.push_back(std::stod(yep));
+        return;
+    }
+
+    where_to_move.push_back(yep);
 }
